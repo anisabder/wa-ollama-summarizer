@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Opens the bot in its own terminal window. Closing the window (Super+W) stops the bot.
+DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+
+# Keep the window open after the bot stops by itself, so an error message can be read.
+RUN=(bash -c '"$1" run; echo; read -rp "The bot stopped. Press Enter to close this window. "' _ "$DIR/wasum")
+
+if command -v xdg-terminal-exec >/dev/null 2>&1; then
+  exec xdg-terminal-exec -- "${RUN[@]}"
+fi
+for term in ghostty alacritty kitty foot; do
+  if command -v "$term" >/dev/null 2>&1; then
+    case "$term" in
+      kitty|foot) exec "$term" "${RUN[@]}" ;;
+      *)          exec "$term" -e "${RUN[@]}" ;;
+    esac
+  fi
+done
+echo "No terminal emulator found. Install one, or run: wasum run" >&2
+exit 1

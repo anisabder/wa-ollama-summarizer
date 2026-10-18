@@ -1,34 +1,59 @@
 #!/usr/bin/env bash
-# Small control command for the WhatsApp summarizer service (Linux / Omarchy).
+# Small control command for the WhatsApp summarizer (Linux / Omarchy).
 UNIT=wa-summarizer.service
 DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+
+# Node path saved by the installer, so this also works when started from the app launcher
+NODE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/wa-summarizer/node-path"
+NODE_BIN=node
+if [ -r "$NODE_FILE" ]; then
+  saved="$(head -n1 "$NODE_FILE")"
+  [ -x "$saved" ] && NODE_BIN="$saved"
+fi
+NODE_FLAGS=(--disable-warning=ExperimentalWarning --disable-warning=DEP0040)
 
 usage() {
   cat <<USAGE
 wasum - control the WhatsApp summarizer
 
-  wasum start      start in the background
-  wasum stop       stop it
-  wasum restart    restart it
-  wasum status     show whether it is running
-  wasum logs       follow the live log (Ctrl+C to leave)
+  wasum window     open the bot in its own window (close the window / Super+W to stop it)
   wasum run        run in this terminal (first-time QR linking, or debugging)
                    e.g.  DEBUG=true wasum run
-  wasum autostart  start automatically at login   (wasum noautostart to turn off)
+  wasum start      start in the background
+  wasum stop       stop the background service
+  wasum restart    restart the background service
+  wasum status     show whether the background service is running
+  wasum logs       follow the background service log (Ctrl+C to leave)
+  wasum clean      kill a leftover browser that a crashed run left behind
+  wasum autostart  start the background service at login   (wasum noautostart to turn off)
 USAGE
 }
 
+run_bot() {
+  systemctl --user stop "$UNIT" 2>/dev/null || true
+  local lock="${XDG_RUNTIME_DIR:-/tmp}/wa-summarizer.lock"
+  cd "$DIR" || exit 1
+  flock -n -o -E 200 "$lock" "$NODE_BIN" "${NODE_FLAGS[@]}" src/index.js
+  local rc=$?
+  if [ "$rc" -eq 200 ]; then
+    echo "The bot is already running in another window."
+    echo "Close that window first (Super+W), then try again."
+  fi
+  return "$rc"
+}
+
 case "${1:-help}" in
+  window)      exec "$DIR/scripts/wasum-window" ;;
+  run)         run_bot; exit $? ;;
   start)       systemctl --user start "$UNIT" && echo "Started. Follow it with: wasum logs" ;;
   stop)        systemctl --user stop "$UNIT" && echo "Stopped." ;;
   restart)     systemctl --user restart "$UNIT" && echo "Restarted." ;;
   status)      systemctl --user status "$UNIT" --no-pager ;;
   logs)        journalctl --user -u "$UNIT" -f -n 50 ;;
+  clean)
+    if pkill -f -- "--user-data-dir=$DIR/auth"; then echo "Killed a leftover browser."; else echo "Nothing to clean."; fi
+    ;;
   autostart)   systemctl --user enable "$UNIT" && echo "Will start at login." ;;
   noautostart) systemctl --user disable "$UNIT" && echo "Will not start at login." ;;
-  run)
-    systemctl --user stop "$UNIT" 2>/dev/null || true
-    cd "$DIR" && exec npm start
-    ;;
   *) usage ;;
 esac

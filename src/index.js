@@ -257,6 +257,7 @@ const watchdog = setTimeout(() => {
 for (const ev of ['qr', 'code', 'authenticated']) client.once(ev, () => clearTimeout(watchdog));
 
 async function shutdown() {
+  setTimeout(() => process.exit(0), 5000).unref();
   try {
     await client.destroy();
   } catch {
@@ -265,8 +266,7 @@ async function shutdown() {
   db.close();
   process.exit(0);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, shutdown);
 
 log(`Starting. Browser: ${chromePath ?? 'puppeteer default (none found)'}`);
 client.initialize().catch((e) => {

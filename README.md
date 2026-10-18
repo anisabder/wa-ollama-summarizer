@@ -23,22 +23,30 @@ cd wa-ollama-summarizer
 bash scripts/install-omarchy.sh
 ```
 
-The installer checks your setup, installs dependencies, creates a systemd user service, and adds the `wasum` command.
+The installer checks your setup, installs dependencies, creates a systemd user service, adds the `wasum` command, and adds a "WhatsApp Summarizer" entry to your app launcher.
+
+First time only: link your WhatsApp.
 
 ```bash
-wasum run        # first time only: scan the QR code, wait for "Ready", then Ctrl+C
-wasum start      # run in the background (also starts at every login)
+wasum run        # scan the QR code, wait for "Ready", then press Ctrl+C
 ```
+
+Then pick how you want to run it:
+
+**From the app launcher (window mode).** Press Super+Space, type `whatsapp` and press Enter. The bot opens in its own terminal window and shows its log. To stop it, click that window and press Super+W. Opening it twice is blocked, so you cannot start two copies by accident. If you only use this mode, run `wasum noautostart` so the background service does not also start at login.
+
+**In the background.** Run `wasum start`. It also starts at every login.
 
 | Command | What it does |
 |---|---|
+| `wasum window` | Open the bot in its own window (same as the launcher entry) |
+| `wasum run` | Run in the current terminal, for linking or debugging (`DEBUG=true wasum run`) |
 | `wasum start` / `stop` / `restart` | Control the background service |
-| `wasum status` | Show whether it is running |
-| `wasum logs` | Follow the live log |
-| `wasum run` | Run in the terminal, for linking or debugging (`DEBUG=true wasum run`) |
-| `wasum autostart` / `noautostart` | Turn start at login on or off |
+| `wasum status` / `logs` | Show the service state / follow its log |
+| `wasum clean` | Kill a leftover browser after a crash |
+| `wasum autostart` / `noautostart` | Turn the background service at login on or off |
 
-If you update Node later, run the installer again.
+If you update Node later, run the installer again. To add only the launcher entry, run `bash scripts/install-launcher.sh`.
 
 ## Install on Windows
 
@@ -116,7 +124,9 @@ Copy `.env.example` to `.env`. Everything is optional.
 - Stuck at "Loading WhatsApp Web": set `WA_WEB_VERSION` to a version from the wppconnect-team/wa-version repo (name without `.html`, for example `2.3000.1050732206-alpha`).
 - "Cannot reach Ollama": check that the Ollama service is running. "Model not found": run `ollama pull` again.
 - Logged out: delete the `auth` folder and link again.
-- Service fails to start after a Node update: run `scripts/install-omarchy.sh` again.
+- Service or launcher fails to start after a Node update: run `scripts/install-omarchy.sh` again.
+- "Browser is already running" after a crash: run `wasum clean`, then start again.
+- Super+W closes whichever window has focus, so click the bot window first.
 
 ## Development
 

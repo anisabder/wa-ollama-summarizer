@@ -47,13 +47,17 @@ ln -sf "$DIR/scripts/wasum" "$HOME/.local/bin/wasum"
 systemctl --user daemon-reload
 systemctl --user enable wa-summarizer.service
 
+bash "$DIR/scripts/install-launcher.sh" >/dev/null
+
 cat <<DONE
 
 Installed.
 
   First time only (links WhatsApp, skip if you already scanned a QR code):
       wasum run        scan the QR code, wait for "Ready", then press Ctrl+C
-  Then:
+  Then either:
+      Super+Space, type "whatsapp"   open the bot in its own window (Super+W stops it)
+  or:
       wasum start      run in the background (it also starts at every login)
       wasum logs       watch what it is doing
       wasum status     check that it is running
