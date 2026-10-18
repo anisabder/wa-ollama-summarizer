@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# PRIVATE: WhatsApp session and your messages. Never commit these.
+auth/
+.wwebjs_auth/
+.wwebjs_cache/
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Local settings
+.env

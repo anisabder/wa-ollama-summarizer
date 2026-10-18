@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Small control command for the WhatsApp summarizer service (Linux / Omarchy).
+UNIT=wa-summarizer.service
+DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+
+usage() {
+  cat <<USAGE
+wasum - control the WhatsApp summarizer
+
+  wasum start      start in the background
+  wasum stop       stop it
+  wasum restart    restart it
+  wasum status     show whether it is running
+  wasum logs       follow the live log (Ctrl+C to leave)
+  wasum run        run in this terminal (first-time QR linking, or debugging)
+                   e.g.  DEBUG=true wasum run
+  wasum autostart  start automatically at login   (wasum noautostart to turn off)
+USAGE
+}
+
+case "${1:-help}" in
+  start)       systemctl --user start "$UNIT" && echo "Started. Follow it with: wasum logs" ;;
+  stop)        systemctl --user stop "$UNIT" && echo "Stopped." ;;
+  restart)     systemctl --user restart "$UNIT" && echo "Restarted." ;;
+  status)      systemctl --user status "$UNIT" --no-pager ;;
+  logs)        journalctl --user -u "$UNIT" -f -n 50 ;;
+  autostart)   systemctl --user enable "$UNIT" && echo "Will start at login." ;;
+  noautostart) systemctl --user disable "$UNIT" && echo "Will not start at login." ;;
+  run)
+    systemctl --user stop "$UNIT" 2>/dev/null || true
+    cd "$DIR" && exec npm start
+    ;;
+  *) usage ;;
+esac

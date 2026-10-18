@@ -1,0 +1,19 @@
+{
+  "name": "wa-ollama-summarizer",
+  "version": "0.1.0",
+  "description": "WhatsApp bot that stores your chats locally and summarizes the last N messages with a local Ollama model",
+  "type": "module",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning --disable-warning=DEP0040 src/index.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "1.34.7"
+  }
+}
